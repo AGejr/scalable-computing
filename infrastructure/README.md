@@ -44,7 +44,7 @@ project_id = "your-project-id"
 
 2. **Run terraform**
 
-In `./backend` run:
+In `./cluster` run:
 
 ```
 terraform init
