@@ -31,3 +31,4 @@ data: patch to yaml file
 weights: path to weight file (*.pt)
 cache: chace images for faster training 
 output weights is saved to path_to/yolov5/runs/train/exp/weights as best.pt or last.pt
+//
