@@ -20,47 +20,14 @@ resource "google_storage_bucket" "ml_bucket" {
   }
 }
 
-# GKE cluster
-resource "google_container_cluster" "primary" {
-  name               = "ml-gke-cluster"
-  location           = var.region # Set to a European zone
-  remove_default_node_pool = true
-  initial_node_count = 1
-  deletion_protection = false
+resource "google_container_cluster" "autopilot_cluster" {
+  name     = "autopilot-cluster"
+  location = var.region
 
-  resource_labels = {
-    environment = "dev"
-  }
+  # Enable Autopilot mode
+  enable_autopilot = true
 
-  ip_allocation_policy {}
-}
-
-# Node pool with GPU-enabled nodes
-resource "google_container_node_pool" "gpu_nodes" {
-  name       = "gpu-node-pool"
-  cluster    = google_container_cluster.primary.name
-  location   = google_container_cluster.primary.location
-
-  node_config {
-    machine_type = "n1-standard-4"
-    oauth_scopes = ["https://www.googleapis.com/auth/cloud-platform"]
-    labels = {
-      gpu = "true"
-    }
-    guest_accelerator {
-      type  = "nvidia-tesla-t4"
-      count = 1
-    }
-    tags = ["gpu"]
-  }
-
-  autoscaling {
-    min_node_count = 1
-    max_node_count = 5 # Adjust based on desired number of workers
-  }
-
-  management {
-    auto_repair  = true
-    auto_upgrade = true
-  }
+  # Optional: Networking configuration
+  network    = "default"
+  subnetwork = "default"
 }
