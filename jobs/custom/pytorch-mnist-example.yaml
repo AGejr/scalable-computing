@@ -18,6 +18,14 @@ spec:
                 - "python3"
                 - "/opt/pytorch-mnist/mnist.py"
                 - "--epochs=1"
+              env:
+              - name: GCS_ACCESS
+                valueFrom:
+                  secretKeyRef:
+                    name: gcs-access
+                    key: service-account.json
+              - name: GCS_BUCKET
+                value: "ml-model-bucket-123456"
     Worker:
       replicas: 5
       restartPolicy: OnFailure
@@ -31,3 +39,11 @@ spec:
                 - "python3"
                 - "/opt/pytorch-mnist/mnist.py"
                 - "--epochs=1"
+              env:
+              - name: GCS_ACCESS
+                valueFrom:
+                  secretKeyRef:
+                    name: gcs-access
+                    key: service-account.json
+              - name: GCS_BUCKET
+                value: "gs://ml-model-bucket-123456"
