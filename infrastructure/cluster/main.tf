@@ -15,6 +15,8 @@ resource "google_container_cluster" "autopilot_cluster" {
   name     = "autopilot-cluster"
   location = var.region
 
+  deletion_protection = false
+
   # Enable Autopilot mode
   enable_autopilot = true
 
