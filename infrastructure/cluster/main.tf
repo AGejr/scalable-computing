@@ -23,6 +23,20 @@ resource "google_container_cluster" "autopilot_cluster" {
   # Optional: Networking configuration
   network    = "default"
   subnetwork = "default"
+
+  # Private cluster configuration
+  private_cluster_config {
+    enable_private_nodes    = true
+    enable_private_endpoint = false
+    master_ipv4_cidr_block  = "172.16.0.0/28"
+  }
+
+  # Enable GcsFuseCsiDriver addon
+  addons_config {
+    gcs_fuse_csi_driver_config {
+      enabled = true
+    }
+  }
 }
 
 resource "google_storage_bucket" "ml_bucket" {
@@ -41,30 +55,36 @@ resource "google_storage_bucket" "ml_bucket" {
   }
 }
 
+# Create GCP Service Account
 resource "google_service_account" "gcs_access" {
   account_id   = "gcs-access-sa"
   display_name = "Service Account for GCS Access from GKE"
 }
 
+# Grant access to GCS bucket
 resource "google_storage_bucket_iam_member" "gcs_access" {
   bucket = google_storage_bucket.ml_bucket.name
-  role   = "roles/storage.objectViewer"
+  role   = "roles/storage.objectAdmin"
   member = "serviceAccount:${google_service_account.gcs_access.email}"
 }
 
-resource "google_service_account_key" "gcs_access_key" {
-  service_account_id = google_service_account.gcs_access.name
-  public_key_type    = "TYPE_X509_PEM_FILE"
-  private_key_type   = "TYPE_GOOGLE_CREDENTIALS_FILE"
+# Kubernetes Service Account
+resource "kubernetes_service_account" "ksa_gcs_access" {
+  metadata {
+    name        = "ksa-gcs-access"
+    namespace   = "default"
+    annotations = {
+      "iam.gke.io/gcp-service-account" = google_service_account.gcs_access.email
+    }
+  }
 }
 
-resource "kubernetes_secret" "gcs_access" {
-  metadata {
-    name = "gcs-access"
-    namespace = "default"
-  }
+# IAM Policy Binding
+resource "google_service_account_iam_binding" "binding" {
+  service_account_id = google_service_account.gcs_access.name
+  role               = "roles/iam.workloadIdentityUser"
 
-  data = {
-    "service-account.json" = base64encode(google_service_account_key.gcs_access_key.private_key)
-  }
+  members = [
+    "serviceAccount:${var.project_id}.svc.id.goog[default/ksa-gcs-access]"
+  ]
 }
