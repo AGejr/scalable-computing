@@ -11,27 +11,22 @@ provider "kubernetes" {
 
 data "google_client_config" "default" {}
 
+# Create GKE Autopilot cluster
 resource "google_container_cluster" "autopilot_cluster" {
   name     = "autopilot-cluster"
   location = var.region
-
   deletion_protection = false
-
-  # Enable Autopilot mode
   enable_autopilot = true
 
-  # Optional: Networking configuration
   network    = "default"
   subnetwork = "default"
 
-  # Private cluster configuration
   private_cluster_config {
     enable_private_nodes    = true
     enable_private_endpoint = false
     master_ipv4_cidr_block  = "172.16.0.0/28"
   }
 
-  # Enable GcsFuseCsiDriver addon
   addons_config {
     gcs_fuse_csi_driver_config {
       enabled = true
@@ -39,6 +34,7 @@ resource "google_container_cluster" "autopilot_cluster" {
   }
 }
 
+# Create GCS bucket
 resource "google_storage_bucket" "ml_bucket" {
   name     = "ml-model-bucket-123456" # Must be globally unique
   location = "EU"
@@ -87,4 +83,12 @@ resource "google_service_account_iam_binding" "binding" {
   members = [
     "serviceAccount:${var.project_id}.svc.id.goog[default/ksa-gcs-access]"
   ]
+}
+
+# Create Artifact Registry repository
+resource "google_artifact_registry_repository" "gcr-io" {
+  location      = "us"
+  repository_id = "gcr.io"
+  description   = "docker repository"
+  format        = "DOCKER"
 }
