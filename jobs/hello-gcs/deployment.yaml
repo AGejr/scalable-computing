@@ -24,6 +24,9 @@ spec:
         volumeMounts:
         - name: gcs-fuse-csi-ephemeral
           mountPath: /data
+        env:
+        - name: GCS_MOUNT_POINT
+          value: "/data"
       serviceAccountName: ksa-gcs-access
       volumes:
       - name: gcs-fuse-csi-ephemeral
