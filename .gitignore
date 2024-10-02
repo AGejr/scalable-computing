@@ -38,3 +38,6 @@ terraform.rc
 
 # Terraform lock file
 **/.terraform.lock.hcl
+
+# Python virtual environment
+**/venv/
