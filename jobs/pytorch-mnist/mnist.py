@@ -9,9 +9,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from tensorboardX import SummaryWriter
-from torch.utils.data import DistributedSampler
-from torchvision import datasets, transforms
-from google.cloud import storage  # Assuming Google Cloud Storage
+from torch.utils.data import TensorDataset, DataLoader, DistributedSampler
 
 
 class Net(nn.Module):
@@ -58,8 +56,6 @@ def train(args, model, device, train_loader, epoch, writer):
             )
             niter = epoch * len(train_loader) + batch_idx
             writer.add_scalar("loss", loss.item(), niter)
-    
-    save_model_to_bucket(model, 'model.pth')
 
 
 def test(model, device, test_loader, writer, epoch):
@@ -190,29 +186,23 @@ def main():
     dist.init_process_group(backend=args.backend)
     model = nn.parallel.DistributedDataParallel(model)
 
-    # Get FashionMNIST train and test dataset.
-    train_ds = datasets.FashionMNIST(
-        "../data",
-        train=True,
-        download=True,
-        transform=transforms.Compose([transforms.ToTensor()]),
-    )
-    test_ds = datasets.FashionMNIST(
-        "../data",
-        train=False,
-        download=True,
-        transform=transforms.Compose([transforms.ToTensor()]),
-    )
+    # Get GCS mount point from environment variable
+    gcs_mount_point = os.getenv('GCS_MOUNT_POINT', '/data')
+
+    # Load train and test datasets from .pth files
+    train_data = torch.load(os.path.join(gcs_mount_point, 'trainset.pth'))
+    test_data = torch.load(os.path.join(gcs_mount_point, 'testset.pth'))
+
     # Add train and test loaders.
-    train_loader = torch.utils.data.DataLoader(
-        train_ds,
+    train_loader = DataLoader(
+        train_data,
         batch_size=args.batch_size,
-        sampler=DistributedSampler(train_ds),
+        sampler=DistributedSampler(train_data),
     )
-    test_loader = torch.utils.data.DataLoader(
-        test_ds,
+    test_loader = DataLoader(
+        test_data,
         batch_size=args.test_batch_size,
-        sampler=DistributedSampler(test_ds),
+        sampler=DistributedSampler(test_data),
     )
 
     for epoch in range(1, args.epochs + 1):
@@ -220,25 +210,8 @@ def main():
         test(model, device, test_loader, writer, epoch)
 
     if args.save_model:
-        torch.save(model.state_dict(), "mnist_cnn.pt")
+        torch.save(model.state_dict(), os.path.join(gcs_mount_point, "mnist_cnn.pt"))
 
 
 if __name__ == "__main__":
     main()
-
-def save_model_to_bucket(model, filename):
-    # Retrieve the secret from the environment
-    bucket_name = os.getenv('GCS_BUCKET')
-    secret_key_path = os.getenv('GCS_ACCESS')
-
-    # Authenticate with Google Cloud Storage
-    storage_client = storage.Client.from_service_account_json(secret_key_path)
-    bucket = storage_client.bucket(bucket_name)
-    blob = bucket.blob(f'model/{filename}')
-
-    # Save the model to a local file
-    torch.save(model.state_dict(), filename)
-
-    # Upload the model to the bucket
-    blob.upload_from_filename(filename)
-    print(f'Model saved to bucket {bucket_name} under /model/{filename}')
