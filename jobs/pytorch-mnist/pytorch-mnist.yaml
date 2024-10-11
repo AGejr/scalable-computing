@@ -1,7 +1,7 @@
 apiVersion: "kubeflow.org/v1"
 kind: "PyTorchJob"
 metadata:
-  name: "pytorch-dist-mnist-gloo"
+  name: "pytorch-dist-mnist-gloo-big"
 spec:
   pytorchReplicaSpecs:
     Master:
@@ -15,7 +15,11 @@ spec:
           containers:
             - name: pytorch
               image: gcr.io/storied-box-435409-f6/pytorch-dist-mnist:latest # Replace project-id with your GCP project ID
-              args: ["--backend", "gloo", "--save-model", "--no-cuda"]
+              args: ["--backend", "gloo", "--save-model", "--no-cuda", "--epochs", "50", "--batch-size", "128", "--dir", "/data" ]
+              resources:
+                requests:
+                  memory: "2Gi"
+                  cpu: "1"
               volumeMounts:
               - name: gcs-fuse-csi-ephemeral
                 mountPath: /data
@@ -32,7 +36,7 @@ spec:
                 mountOptions: "implicit-dirs"
                 gcsfuseLoggingSeverity: warning
     Worker:
-      replicas: 1
+      replicas: 3
       restartPolicy: OnFailure
       template:
         metadata:
@@ -42,7 +46,11 @@ spec:
           containers:
             - name: pytorch
               image: gcr.io/storied-box-435409-f6/pytorch-dist-mnist:latest # Replace project-id with your GCP project ID
-              args: ["--backend", "gloo", "--save-model", "--no-cuda"]
+              args: ["--backend", "gloo", "--save-model", "--no-cuda", "--epochs", "50", "--batch-size", "128", "--dir", "/data" ]
+              resources:
+                requests:
+                  memory: "6Gi"
+                  cpu: "3"
               volumeMounts:
               - name: gcs-fuse-csi-ephemeral
                 mountPath: /data
