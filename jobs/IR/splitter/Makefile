@@ -8,8 +8,8 @@ build:
 	docker build -t $(IMAGE_NAME):$(TAG) .
 
 run: build
-	@if [ ! -d "../data/ir" ]; then \
-		echo "Directory ../data/ir does not exist."; \
+	@if [ ! -d "./data/ir" ]; then \
+		echo "Directory ./data/ir does not exist."; \
 		exit 1; \
 	fi
-	docker run -v ../data:/data $(IMAGE_NAME):$(TAG)
+	docker run -v $(shell pwd)/data:/data $(IMAGE_NAME):$(TAG)
