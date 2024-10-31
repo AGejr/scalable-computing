@@ -158,7 +158,7 @@ def main():
         test(model, device, test_loader, writer, epoch)
 
     if args.save_model:
-        torch.save(model.state_dict(), os.path.join(gcs_mount_point, "mnist_cnn.pt"))
+        torch.save(model.state_dict(), os.path.join(gcs_mount_point, "ir_model.pt"))
 
 if __name__ == "__main__":
     main()
