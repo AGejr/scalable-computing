@@ -8,8 +8,8 @@ from tqdm import tqdm  # For progress bar
 
 # Parameters
 image_size = (128, 128)  # Target image size
-data_dir = 'C:\\Users\\mglad\\Documents\\lip_pose_pic\\ir'  # Replace with your dataset path
-output_dir = 'c:\\Users\\mglad\\Documents\\lip_pose_pic\\done'  # Base directory to save processed images
+data_dir = '/data/ir'  # Replace with your dataset path
+output_dir = '/data/done'  # Base directory to save processed images
 validation_split = 0.2   # Percentage of the data used for validation
 random_seed = 42         # For reproducibility
 

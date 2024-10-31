@@ -37,7 +37,7 @@ class Net(nn.Module):
         # Flatten and Fully Connected Layer
         # After pooling, spatial size ~ (128, 3, 3) for input of (1, 30, 30)
         self.flatten_size = 128 * 3 * 3
-        self.fc = nn.Linear(self.flatten_size, 2)
+        self.fc = nn.Linear(self.flatten_size, 5)
 
     def forward(self, x):
         x = x / 255.0  # Rescale input
