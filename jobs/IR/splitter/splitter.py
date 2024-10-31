@@ -2,44 +2,29 @@ import os
 import torch
 from torch.utils.data import DataLoader, SubsetRandomSampler
 from torchvision import datasets, transforms
-from PIL import Image  # For saving images
 import numpy as np
-from tqdm import tqdm  # For progress bar
+from tqdm import tqdm
 
 # Parameters
 image_size = (128, 128)  # Target image size
-data_dir = '/data/ir'  # Replace with your dataset path
-output_dir = '/data/done'  # Base directory to save processed images
-validation_split = 0.2   # Percentage of the data used for validation
-random_seed = 42         # For reproducibility
+data_dir = 'C:\\Users\\mglad\\Documents\\lip_pose_pic\\ir'  # Replace with your dataset path
+output_dir = 'c:\\Users\\mglad\\Documents\\lip_pose_pic\\done'  # Base directory to save processed images
+validation_split = 0.2    # Percentage of the data used for validation
+random_seed = 42          # For reproducibility
 
 # Step 1: Define Transformations
 train_transforms = transforms.Compose([
-    transforms.Resize(image_size),             # Resize to image_size
-    transforms.RandomRotation(20),             # Random rotation up to 20 degrees
-    transforms.RandomHorizontalFlip(),         # Random horizontal flip
-    transforms.ToTensor(),                     # Convert image to tensor
-    #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]) # Normalize to ImageNet standards
-])
-
-# Validation/test transformation: Only resizing and normalization
-test_transforms = transforms.Compose([
     transforms.Resize(image_size),
+    transforms.RandomRotation(20),
+    transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
-    #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]) 
 ])
 
 # Step 2: Load Dataset
 dataset = datasets.ImageFolder(root=data_dir, transform=train_transforms)
 
-# Step 3: Create Output Directories
-train_dir = os.path.join(output_dir, 'train')
-val_dir = os.path.join(output_dir, 'val')
-
-os.makedirs(train_dir, exist_ok=True)
-os.makedirs(val_dir, exist_ok=True)
-
-# Step 4: Create Training and Validation Split
+# Step 3: Create Training and Validation Split
 dataset_size = len(dataset)
 indices = list(range(dataset_size))
 split = int(np.floor(validation_split * dataset_size))
@@ -53,49 +38,38 @@ train_indices, val_indices = indices[split:], indices[:split]
 train_sampler = SubsetRandomSampler(train_indices)
 val_sampler = SubsetRandomSampler(val_indices)
 
-# Step 5: Data Loaders
+# Step 4: Data Loaders
 train_loader = DataLoader(dataset, batch_size=32, sampler=train_sampler)
 val_loader = DataLoader(dataset, batch_size=32, sampler=val_sampler)
 
-# Step 6: Save Processed Images for Train Set
-for i, (images, labels) in tqdm(enumerate(train_loader), total=len(train_loader)):
-    for j, (img, label) in enumerate(zip(images, labels)):
-        img = img.clone().cpu()  # Clone the tensor and move to CPU
-        img = img.permute(1, 2, 0)  # Change from (C, H, W) to (H, W, C)
-        img = (img * 255).numpy().astype(np.uint8)  # Denormalize and convert to uint8
-        
-        # Get class name from dataset
-        class_name = dataset.classes[label.item()]
-        class_dir = os.path.join(train_dir, class_name)
-        
-        # Create class directory if it doesn't exist
-        os.makedirs(class_dir, exist_ok=True)
+# Initialize lists to store the data
+train_images, train_labels = [], []
+val_images, val_labels = [], []
 
-        # Create a filename based on the index and label
-        save_path = os.path.join(class_dir, f"train_img_{i * 32 + j}.png")
-        # Save image using PIL
-        image_pil = Image.fromarray(img)
-        image_pil.save(save_path)
+# Step 5: Process and Save Training Data in Memory
+for images, labels in tqdm(train_loader, total=len(train_loader), desc="Processing Training Data"):
+    train_images.append(images)
+    train_labels.append(labels)
 
-# Step 7: Save Processed Images for Validation Set
-for i, (images, labels) in tqdm(enumerate(val_loader), total=len(val_loader)):
-    for j, (img, label) in enumerate(zip(images, labels)):
-        img = img.clone().cpu()  # Clone the tensor and move to CPU
-        img = img.permute(1, 2, 0)  # Change from (C, H, W) to (H, W, C)
-        img = (img * 255).numpy().astype(np.uint8)  # Denormalize and convert to uint8
-        
-        # Get class name from dataset
-        class_name = dataset.classes[label.item()]
-        class_dir = os.path.join(val_dir, class_name)
-        
-        # Create class directory if it doesn't exist
-        os.makedirs(class_dir, exist_ok=True)
+# Concatenate all batches into a single tensor
+train_images = torch.cat(train_images)
+train_labels = torch.cat(train_labels)
 
-        # Create a filename based on the index and label
-        save_path = os.path.join(class_dir, f"val_img_{i * 32 + j}.png")
-        
-        # Save image using PIL
-        image_pil = Image.fromarray(img)
-        image_pil.save(save_path)
+# Save training data to a .pth file
+train_data_path = os.path.join(output_dir, 'train.pth')
+torch.save({'images': train_images, 'labels': train_labels}, train_data_path)
 
-print("Processed images saved successfully!")
+# Step 6: Process and Save Validation Data in Memory
+for images, labels in tqdm(val_loader, total=len(val_loader), desc="Processing Validation Data"):
+    val_images.append(images)
+    val_labels.append(labels)
+
+# Concatenate all batches into a single tensor
+val_images = torch.cat(val_images)
+val_labels = torch.cat(val_labels)
+
+# Save validation data to a .pth file
+val_data_path = os.path.join(output_dir, 'val.pth')
+torch.save({'images': val_images, 'labels': val_labels}, val_data_path)
+
+print("Data saved successfully to .pth files!")
