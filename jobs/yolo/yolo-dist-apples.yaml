@@ -1,0 +1,72 @@
+apiVersion: "kubeflow.org/v1"
+kind: "PyTorchJob"
+metadata:
+  name: "yolo-dist-apples"
+spec:
+  pytorchReplicaSpecs:
+    Master:
+      replicas: 1
+      restartPolicy: OnFailure
+      template:
+        metadata:
+          annotations:
+            gke-gcsfuse/volumes: "true"
+        spec:
+          containers:
+            - name: pytorch
+              image: gcr.io/storied-box-435409-f6/yolo-apple:latest # Replace project-id with your GCP project ID
+              args: ["python", "-m", "torch.distributed.run", "--nproc_per_node", "1", "train.py", "--img", "416", "--batch", "32", "--epochs", "10", "--device", "cpu", "--data", "data/data.yaml"]
+              resources:
+                requests:
+                  memory: "1Gi"
+                  cpu: "1"
+              volumeMounts:
+              - name: gcs-fuse-csi-ephemeral
+                mountPath: /data
+              env:
+              - name: GCS_MOUNT_POINT
+                value: "/data"
+              - name: WORLD_SIZE
+                value: "4"
+          serviceAccountName: ksa-gcs-access
+          volumes:
+          - name: gcs-fuse-csi-ephemeral
+            csi:
+              driver: gcsfuse.csi.storage.gke.io
+              volumeAttributes:
+                bucketName: ml-model-bucket-123456
+                mountOptions: "implicit-dirs"
+                gcsfuseLoggingSeverity: warning
+    Worker:
+      replicas: 3
+      restartPolicy: OnFailure
+      template:
+        metadata:
+          annotations:
+            gke-gcsfuse/volumes: "true"
+        spec:
+          containers:
+            - name: pytorch
+              image: gcr.io/storied-box-435409-f6/yolo-apple:latest # Replace project-id with your GCP project ID
+              args: ["python", "-m", "torch.distributed.run", "--nproc_per_node", "1", "train.py", "--img", "416", "--batch", "32", "--epochs", "10", "--device", "cpu", "--data", "data/data.yaml"]
+              resources:
+                requests:
+                  memory: "2Gi"
+                  cpu: "2"
+              volumeMounts:
+              - name: gcs-fuse-csi-ephemeral
+                mountPath: /data
+              env:
+              - name: GCS_MOUNT_POINT
+                value: "/data"
+              - name: WORLD_SIZE
+                value: "4"
+          serviceAccountName: ksa-gcs-access
+          volumes:
+          - name: gcs-fuse-csi-ephemeral
+            csi:
+              driver: gcsfuse.csi.storage.gke.io
+              volumeAttributes:
+                bucketName: ml-model-bucket-123456
+                mountOptions: "implicit-dirs"
+                gcsfuseLoggingSeverity: warning

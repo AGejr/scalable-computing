@@ -2,21 +2,20 @@
 # Usage: pip install -r requirements.txt
 
 # Base ------------------------------------------------------------------------
-gitpython
-matplotlib
-numpy
-opencv-python
-pillow
+gitpython>=3.1.30
+matplotlib>=3.3
+numpy>=1.23.5
+opencv-python-headless>=4.1.1
+pillow>=10.3.0
 psutil  # system resources
-PyYAML
-requests
-scipy
-thop  # FLOPs computation
-torch  # see https://pytorch.org/get-started/locally (recommended)
-torchvision
-tqdm
-ultralytics  # https://ultralytics.com
-opencv-python
+PyYAML>=5.3.1
+requests>=2.32.2
+scipy>=1.4.1
+thop>=0.1.1  # FLOPs computation
+torch>=1.8.0  # see https://pytorch.org/get-started/locally (recommended)
+torchvision>=0.9.0
+tqdm>=4.66.3
+ultralytics>=8.2.34  # https://ultralytics.com
 # protobuf<=3.20.1  # https://github.com/ultralytics/yolov5/issues/8012
 
 # Logging ---------------------------------------------------------------------
@@ -25,8 +24,8 @@ opencv-python
 # comet
 
 # Plotting --------------------------------------------------------------------
-pandas
-seaborn
+pandas>=1.1.4
+seaborn>=0.11.0
 
 # Export ----------------------------------------------------------------------
 # coremltools>=6.0  # CoreML export
@@ -40,7 +39,7 @@ seaborn
 # openvino-dev>=2023.0  # OpenVINO export
 
 # Deploy ----------------------------------------------------------------------
-setuptools # Snyk vulnerability fix
+setuptools>=70.0.0 # Snyk vulnerability fix
 # tritonclient[all]~=2.24.0
 
 # Extras ----------------------------------------------------------------------
