@@ -147,8 +147,8 @@ def main():
     model = nn.parallel.DistributedDataParallel(model)
 
     gcs_mount_point = os.getenv('GCS_MOUNT_POINT', '/data')
-    train_data = torch.load(os.path.join(gcs_mount_point, 'trainset.pth'))
-    test_data = torch.load(os.path.join(gcs_mount_point, 'testset.pth'))
+    train_data = torch.load(os.path.join(gcs_mount_point, 'train.pth'))
+    test_data = torch.load(os.path.join(gcs_mount_point, 'val.pth'))
 
     train_loader = DataLoader(train_data, batch_size=args.batch_size, sampler=DistributedSampler(train_data))
     test_loader = DataLoader(test_data, batch_size=args.test_batch_size, sampler=DistributedSampler(test_data))
