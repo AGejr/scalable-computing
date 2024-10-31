@@ -7,8 +7,8 @@ from tqdm import tqdm
 
 # Parameters
 image_size = (128, 128)  # Target image size
-data_dir = 'C:\\Users\\mglad\\Documents\\lip_pose_pic\\ir'  # Replace with your dataset path
-output_dir = 'c:\\Users\\mglad\\Documents\\lip_pose_pic\\done'  # Base directory to save processed images
+data_dir = '/data/ir'  # Replace with your dataset path
+output_dir = '/data/done'  # Base directory to save processed images
 validation_split = 0.2    # Percentage of the data used for validation
 random_seed = 42          # For reproducibility
 
@@ -72,4 +72,5 @@ val_labels = torch.cat(val_labels)
 val_data_path = os.path.join(output_dir, 'val.pth')
 torch.save({'images': val_images, 'labels': val_labels}, val_data_path)
 
-print("Data saved successfully to .pth files!")
+os.system(f'gcloud storage cp {os.path.join(output_dir, "train.pth")} gs://ml-model-bucket-123456/train.pth')
+os.system(f'gcloud storage cp {os.path.join(output_dir, "val.pth")} gs://ml-model-bucket-123456/val.pth')
