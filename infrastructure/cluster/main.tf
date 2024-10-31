@@ -17,6 +17,9 @@ resource "google_container_cluster" "autopilot_cluster" {
   location = var.region
   deletion_protection = false
   enable_autopilot = true
+  cost_management_config {
+    enabled = true
+  }
 
   network    = "default"
   subnetwork = "default"
