@@ -2,6 +2,8 @@ from __future__ import print_function
 
 import argparse
 import os
+import datetime
+import matplotlib.pyplot as plt
 
 import torch
 import torch.distributed as dist
@@ -31,7 +33,7 @@ class Net(nn.Module):
         return F.log_softmax(x, dim=1)
 
 
-def train(args, model, device, train_loader, epoch, writer):
+def train(args, model, device, train_loader, epoch, writer, train_losses):
     model.train()
     optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
@@ -56,9 +58,10 @@ def train(args, model, device, train_loader, epoch, writer):
             )
             niter = epoch * len(train_loader) + batch_idx
             writer.add_scalar("loss", loss.item(), niter)
+            train_losses.append(loss.item())
 
 
-def test(model, device, test_loader, writer, epoch):
+def test(model, device, test_loader, writer, epoch, test_accuracies):
     model.eval()
 
     correct = 0
@@ -72,8 +75,22 @@ def test(model, device, test_loader, writer, epoch):
             pred = output.max(1, keepdim=True)[1]
             correct += pred.eq(target.view_as(pred)).sum().item()
 
-    print("\naccuracy={:.4f}\n".format(float(correct) / len(test_loader.dataset)))
-    writer.add_scalar("accuracy", float(correct) / len(test_loader.dataset), epoch)
+    accuracy = float(correct) / len(test_loader.dataset)
+    print("\naccuracy={:.4f}\n".format(accuracy))
+    writer.add_scalar("accuracy", accuracy, epoch)
+    test_accuracies.append(accuracy)
+
+
+def plot_performance(train_losses, test_accuracies, output_dir):
+    epochs = range(1, len(test_accuracies) + 1)
+    plt.figure()
+    plt.plot(epochs, train_losses, label='Training loss')
+    plt.plot(epochs, test_accuracies, label='Test accuracy')
+    plt.xlabel('Epochs')
+    plt.ylabel('Performance')
+    plt.legend()
+    plt.savefig(os.path.join(output_dir, 'performance.png'))
+    plt.close()
 
 
 def main():
@@ -146,13 +163,18 @@ def main():
         metavar="L",
         help="directory where summary logs are stored",
     )
-
     parser.add_argument(
         "--backend",
         type=str,
         help="Distributed backend",
         choices=[dist.Backend.GLOO, dist.Backend.NCCL, dist.Backend.MPI],
         default=dist.Backend.GLOO,
+    )
+    parser.add_argument(
+        "--plot",
+        action="store_true",
+        default=False,
+        help="Plot training and test performance",
     )
 
     args = parser.parse_args()
@@ -164,7 +186,12 @@ def main():
                 "Warning. Please use `nccl` distributed backend for the best performance using GPUs"
             )
 
-    writer = SummaryWriter(args.dir)
+    # Create a directory with the current timestamp
+    timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    output_dir = f"pytorch-mnist-{timestamp}"
+    os.makedirs(output_dir, exist_ok=True)
+
+    writer = SummaryWriter(os.path.join(output_dir, args.dir))
 
     torch.manual_seed(args.seed)
 
@@ -205,12 +232,18 @@ def main():
         sampler=DistributedSampler(test_data),
     )
 
+    train_losses = []
+    test_accuracies = []
+
     for epoch in range(1, args.epochs + 1):
-        train(args, model, device, train_loader, epoch, writer)
-        test(model, device, test_loader, writer, epoch)
+        train(args, model, device, train_loader, epoch, writer, train_losses)
+        test(model, device, test_loader, writer, epoch, test_accuracies)
 
     if args.save_model:
-        torch.save(model.state_dict(), os.path.join(gcs_mount_point, "mnist_cnn.pt"))
+        torch.save(model.state_dict(), os.path.join(output_dir, "mnist_cnn.pt"))
+
+    if args.plot:
+        plot_performance(train_losses, test_accuracies, output_dir)
 
 
 if __name__ == "__main__":
