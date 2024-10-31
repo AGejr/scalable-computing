@@ -19,7 +19,7 @@ spec:
               resources:
                 requests:
                   memory: "2Gi"
-                  cpu: "1"
+                  cpu: "2"
               volumeMounts:
               - name: gcs-fuse-csi-ephemeral
                 mountPath: /data
@@ -49,8 +49,8 @@ spec:
               args: ["--backend", "gloo", "--save-model", "--no-cuda", "--epochs", "50", "--batch-size", "128", "--dir", "/data" ]
               resources:
                 requests:
-                  memory: "6Gi"
-                  cpu: "3"
+                  memory: "3Gi"
+                  cpu: "2"
               volumeMounts:
               - name: gcs-fuse-csi-ephemeral
                 mountPath: /data
