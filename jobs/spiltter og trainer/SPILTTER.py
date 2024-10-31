@@ -8,8 +8,8 @@ from tqdm import tqdm  # For progress bar
 
 # Parameters
 image_size = (128, 128)  # Target image size
-data_dir = 'C:\\Users\\mglad\\Documents\\lip_pose_pic\\TEST'  # Replace with your dataset path
-output_dir = 'c:\\Users\\mglad\\Documents\\lip_pose_pic\done'  # Base directory to save processed images
+data_dir = 'C:\\Users\\mglad\\Documents\\lip_pose_pic\\ir'  # Replace with your dataset path
+output_dir = 'c:\\Users\\mglad\\Documents\\lip_pose_pic\\done'  # Base directory to save processed images
 validation_split = 0.2   # Percentage of the data used for validation
 random_seed = 42         # For reproducibility
 
@@ -78,7 +78,7 @@ for i, (images, labels) in tqdm(enumerate(train_loader), total=len(train_loader)
         image_pil.save(save_path)
 
 # Step 7: Save Processed Images for Validation Set
-for i, (images, labels) in tqdm(enumerate(train_loader), total=len(train_loader)):
+for i, (images, labels) in tqdm(enumerate(val_loader), total=len(val_loader)):
     for j, (img, label) in enumerate(zip(images, labels)):
         img = img.clone().cpu()  # Clone the tensor and move to CPU
         img = img.permute(1, 2, 0)  # Change from (C, H, W) to (H, W, C)
