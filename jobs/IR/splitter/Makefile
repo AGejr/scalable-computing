@@ -15,3 +15,6 @@ run:
 	docker run -v $(shell pwd)/data:/data $(IMAGE_NAME):$(TAG)
 
 build-and-run: build run
+
+upload:
+	python3 upload.py

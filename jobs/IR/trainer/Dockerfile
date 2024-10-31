@@ -15,4 +15,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE 80
 
 # Run splitter.py when the container launches
-CMD ["python", "trainer.py"]
+ENTRYPOINT ["python", "/app/trainer.py"]

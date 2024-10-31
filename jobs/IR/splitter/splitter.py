@@ -71,6 +71,3 @@ val_labels = torch.cat(val_labels)
 # Save validation data to a .pth file
 val_data_path = os.path.join(output_dir, 'val.pth')
 torch.save({'images': val_images, 'labels': val_labels}, val_data_path)
-
-os.system(f'gcloud storage cp {os.path.join(output_dir, "train.pth")} gs://ml-model-bucket-123456/train.pth')
-os.system(f'gcloud storage cp {os.path.join(output_dir, "val.pth")} gs://ml-model-bucket-123456/val.pth')

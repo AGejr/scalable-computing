@@ -62,7 +62,7 @@ class Net(nn.Module):
 
 def train(args, model, device, train_loader, epoch, writer):
     model.train()
-    optimizer = optim.Adam(model.parameters(), lr=args.lr, momentum=args.momentum,weight_decay=1e-4)
+    optimizer = optim.Adam(model.parameters(), lr=args.lr,weight_decay=1e-4)
 
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
