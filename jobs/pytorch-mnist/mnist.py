@@ -33,12 +33,12 @@ class Net(nn.Module):
         return F.log_softmax(x, dim=1)
 
 
-def train(args, model, device, train_loader, epoch, writer, train_losses):
+def train(args, model, device, train_loader, epoch, writer, train_losses, train_accuracies):
     model.train()
-    optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
-
+    optimizer = optim.Adam(model.parameters(), lr=args.lr)
+    correct = 0
+    total_loss = 0
     for batch_idx, (data, target) in enumerate(train_loader):
-        # Attach tensors to the device.
         data, target = data.to(device), target.to(device)
 
         optimizer.zero_grad()
@@ -46,39 +46,43 @@ def train(args, model, device, train_loader, epoch, writer, train_losses):
         loss = F.nll_loss(output, target)
         loss.backward()
         optimizer.step()
-        if batch_idx % args.log_interval == 0:
-            print(
-                "Train Epoch: {} [{}/{} ({:.0f}%)]\tloss={:.4f}".format(
-                    epoch,
-                    batch_idx * len(data),
-                    len(train_loader.dataset),
-                    100.0 * batch_idx / len(train_loader),
-                    loss.item(),
-                )
-            )
-            niter = epoch * len(train_loader) + batch_idx
-            writer.add_scalar("loss", loss.item(), niter)
-            train_losses.append(loss.item())
 
+        total_loss += loss.item()
 
-def test(model, device, test_loader, writer, epoch, test_accuracies):
+        # Calculate the number of correct predictions for the batch
+        pred = output.argmax(dim=1, keepdim=True)
+        correct += pred.eq(target.view_as(pred)).sum().item()
+        
+
+    average_loss = total_loss / len(train_loader)
+    accuracy = 100.0 * correct / len(train_loader.dataset)
+    writer.add_scalar("train_loss", average_loss, epoch)
+    writer.add_scalar("train_accuracy", accuracy, epoch)
+    train_losses.append(average_loss)
+    train_accuracies.append(accuracy)
+    print(f"Train Epoch: {epoch} Loss: {loss.item():.4f} Accuracy: {accuracy:.2f}%")
+
+def test(model, device, test_loader, writer, epoch, test_losses, test_accuracies):
     model.eval()
-
+    test_loss = 0
     correct = 0
+
     with torch.no_grad():
         for data, target in test_loader:
-            # Attach tensors to the device.
             data, target = data.to(device), target.to(device)
-
             output = model(data)
-            # Get the index of the max log-probability.
-            pred = output.max(1, keepdim=True)[1]
+            test_loss += F.nll_loss(output, target, reduction='sum').item()
+            pred = output.argmax(dim=1, keepdim=True)
             correct += pred.eq(target.view_as(pred)).sum().item()
 
-    accuracy = float(correct) / len(test_loader.dataset)
-    print("\naccuracy={:.4f}\n".format(accuracy))
-    writer.add_scalar("accuracy", accuracy, epoch)
+    test_loss /= len(test_loader.dataset)
+    accuracy = 100.0 * correct / len(test_loader.dataset)
+    writer.add_scalar("test_loss", test_loss, epoch)
+    writer.add_scalar("test_accuracy", accuracy, epoch)
+    test_losses.append(test_loss)
     test_accuracies.append(accuracy)
+    print(f"Test set: Average loss: {test_loss:.4f}, Accuracy: {accuracy:.2f}%")
+
 
 
 def plot_performance(train_losses, test_accuracies, output_dir):
@@ -224,27 +228,29 @@ def main():
     train_loader = DataLoader(
         train_data,
         batch_size=args.batch_size,
+        shuffle=True,
         sampler=DistributedSampler(train_data),
     )
     test_loader = DataLoader(
         test_data,
         batch_size=args.test_batch_size,
+        shuffle=False,
         sampler=DistributedSampler(test_data),
     )
 
-    train_losses = []
-    test_accuracies = []
+    train_losses, train_accuracies = [], []
+    test_losses, test_accuracies = [], []
 
     for epoch in range(1, args.epochs + 1):
-        train(args, model, device, train_loader, epoch, writer, train_losses)
-        test(model, device, test_loader, writer, epoch, test_accuracies)
+        train(args, model, device, train_loader, epoch, writer, train_losses, train_accuracies)
+        test(model, device, test_loader, writer, epoch, test_losses, test_accuracies)
 
     if args.save_model:
         torch.save(model.state_dict(), os.path.join(output_dir, "mnist_cnn.pt"))
 
     if args.plot:
         plot_performance(train_losses, test_accuracies, output_dir)
-
+    writer.close()
 
 if __name__ == "__main__":
     main()
