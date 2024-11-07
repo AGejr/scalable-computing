@@ -3,7 +3,7 @@ from torchvision import datasets, transforms
 import os
 
 # Define a transform to normalize the data
-transform = transforms.Compose([transforms.ToTensor()])
+transform = transforms.Compose([transforms.ToTensor(),transforms.RandomHorizontalFlip(),transforms.RandomVerticalFlip(),transforms.RandomRotation(45),transforms.ColorJitter(brightness=[0,0.1],contrast=[0,0.1],saturation=[0,0.1],hue=[0,0.1])])
 
 # Download and load the training data
 trainset = datasets.FashionMNIST('./data/F_MNIST_data/', download=True, train=True, transform=transform)
