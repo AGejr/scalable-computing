@@ -2,9 +2,6 @@ from __future__ import print_function
 
 import argparse
 import os
-import datetime
-import matplotlib.pyplot as plt
-
 import torch
 import torch.distributed as dist
 import torch.nn as nn
@@ -80,19 +77,6 @@ def test(model, device, test_loader, writer, epoch, test_accuracies):
     writer.add_scalar("accuracy", accuracy, epoch)
     test_accuracies.append(accuracy)
 
-
-def plot_performance(train_losses, test_accuracies, output_dir):
-    epochs = range(1, len(test_accuracies) + 1)
-    plt.figure()
-    plt.plot(epochs, train_losses, label='Training loss')
-    plt.plot(epochs, test_accuracies, label='Test accuracy')
-    plt.xlabel('Epochs')
-    plt.ylabel('Performance')
-    plt.legend()
-    plt.savefig(os.path.join(output_dir, 'performance.png'))
-    plt.close()
-
-
 def main():
     # Training settings
     parser = argparse.ArgumentParser(description="PyTorch FashionMNIST Example")
@@ -158,10 +142,10 @@ def main():
         help="For Saving the current Model",
     )
     parser.add_argument(
-        "--dir",
-        default="logs",
-        metavar="L",
-        help="directory where summary logs are stored",
+        "--save-summaries",
+        action="store_true",
+        default=True,
+        help="For Saving training summaries",
     )
     parser.add_argument(
         "--backend",
@@ -169,12 +153,6 @@ def main():
         help="Distributed backend",
         choices=[dist.Backend.GLOO, dist.Backend.NCCL, dist.Backend.MPI],
         default=dist.Backend.GLOO,
-    )
-    parser.add_argument(
-        "--plot",
-        action="store_true",
-        default=False,
-        help="Plot training and test performance",
     )
 
     args = parser.parse_args()
@@ -185,13 +163,16 @@ def main():
             print(
                 "Warning. Please use `nccl` distributed backend for the best performance using GPUs"
             )
+    
+    # Get GCS mount point from environment variable
+    gcs_mount_point = os.getenv('GCS_MOUNT_POINT', '/data')
 
     # Create a directory with the current timestamp
-    timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    output_dir = f"pytorch-mnist-{timestamp}"
+    output_dir = f"{gcs_mount_point}/dist-mnist"
     os.makedirs(output_dir, exist_ok=True)
 
-    writer = SummaryWriter(os.path.join(output_dir, args.dir))
+    if args.save_summaries:
+        writer = SummaryWriter(output_dir)
 
     torch.manual_seed(args.seed)
 
@@ -212,9 +193,6 @@ def main():
 
     dist.init_process_group(backend=args.backend)
     model = nn.parallel.DistributedDataParallel(model)
-
-    # Get GCS mount point from environment variable
-    gcs_mount_point = os.getenv('GCS_MOUNT_POINT', '/data')
 
     # Load train and test datasets from .pth files
     train_data = torch.load(os.path.join(gcs_mount_point, 'trainset.pth'))
@@ -239,12 +217,12 @@ def main():
         train(args, model, device, train_loader, epoch, writer, train_losses)
         test(model, device, test_loader, writer, epoch, test_accuracies)
 
+    global_rank = dist.get_global_rank(model.process_group, dist.get_rank(model.process_group))
+    print(f"Global Rank: {global_rank}")
+    
     if args.save_model:
-        torch.save(model.state_dict(), os.path.join(output_dir, "mnist_cnn.pt"))
-
-    if args.plot:
-        plot_performance(train_losses, test_accuracies, output_dir)
-
+        if global_rank == 0:
+            torch.save(model.state_dict(), os.path.join(output_dir, "mnist_cnn.pt"))
 
 if __name__ == "__main__":
     main()
