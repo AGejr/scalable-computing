@@ -206,13 +206,11 @@ def main():
     train_loader = DataLoader(
         train_data,
         batch_size=args.batch_size,
-        shuffle=True,
         sampler=DistributedSampler(train_data),
     )
     test_loader = DataLoader(
         test_data,
         batch_size=args.test_batch_size,
-        shuffle=False,
         sampler=DistributedSampler(test_data),
     )
 
@@ -228,8 +226,6 @@ def main():
     
     if args.save_model and global_rank == 0:
         torch.save(model.state_dict(), os.path.join(output_dir, "mnist_cnn.pt"))
-    
-    writer.close()
 
 if __name__ == "__main__":
     main()
