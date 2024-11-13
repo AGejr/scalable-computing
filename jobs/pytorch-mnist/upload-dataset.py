@@ -12,10 +12,12 @@ transform = transforms.Compose([
 
 
 # Download and load the training data
-trainset = datasets.FashionMNIST('./data/F_MNIST_data/', download=True, train=True, transform=transform)
+train_valid_dataset = datasets.FashionMNIST('./data/F_MNIST_data/', download=True, train=True, transform=transform)
 
-# Download and load the test data
-valset = datasets.FashionMNIST('./data/F_MNIST_data/', download=True, train=False, transform=transform)
+valid_ratio = 0.2
+nb_train = int((1.0 - valid_ratio) * len(train_valid_dataset))
+nb_valid =  int(valid_ratio * len(train_valid_dataset))
+train_dataset, valid_dataset = torch.utils.data.dataset.random_split(train_valid_dataset, [nb_train, nb_valid])
 
 print("FashionMNIST dataset downloaded and saved successfully.")
 # Define the directory to save the dataset
@@ -23,10 +25,10 @@ save_dir = './data'
 os.makedirs(save_dir, exist_ok=True)
 
 # Save the training data
-torch.save(trainset, os.path.join(save_dir, 'trainset.pth'))
+torch.save(train_dataset, os.path.join(save_dir, 'trainset.pth'))
 
 # Save the test data
-torch.save(valset, os.path.join(save_dir, 'valset.pth'))
+torch.save(valid_dataset, os.path.join(save_dir, 'valset.pth'))
 
 print(f"Training and test datasets saved to {save_dir}")
 
