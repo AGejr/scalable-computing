@@ -3,13 +3,19 @@ from torchvision import datasets, transforms
 import os
 
 # Define a transform to normalize the data
-transform = transforms.Compose([transforms.ToTensor()])
+transform = transforms.Compose([
+    transforms.RandomRotation(10),       
+    transforms.RandomCrop(28, padding=4), 
+    transforms.ToTensor(),
+    transforms.Normalize((0.5,), (0.5,))
+])
+
 
 # Download and load the training data
 trainset = datasets.FashionMNIST('./data/F_MNIST_data/', download=True, train=True, transform=transform)
 
 # Download and load the test data
-testset = datasets.FashionMNIST('./data/F_MNIST_data/', download=True, train=False, transform=transform)
+valset = datasets.FashionMNIST('./data/F_MNIST_data/', download=True, train=False, transform=transform)
 
 print("FashionMNIST dataset downloaded and saved successfully.")
 # Define the directory to save the dataset
@@ -20,7 +26,7 @@ os.makedirs(save_dir, exist_ok=True)
 torch.save(trainset, os.path.join(save_dir, 'trainset.pth'))
 
 # Save the test data
-torch.save(testset, os.path.join(save_dir, 'testset.pth'))
+torch.save(valset, os.path.join(save_dir, 'valset.pth'))
 
 print(f"Training and test datasets saved to {save_dir}")
 
