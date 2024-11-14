@@ -28,7 +28,7 @@ class big(nn.Module):
             nn.Dropout(0.25)
         )
         self.fc1 = nn.Linear(64 * 7 * 7, 128)  # Fully connected layer
-        self.fc1_dropout = nn.Dropout(0.5)
+        self.fc1_dropout = nn.Dropout(0.25)
         self.fc2 = nn.Linear(128, 10)  # Output layer for 10 classes
 
     def forward(self, x):
@@ -61,7 +61,19 @@ class small(nn.Module):
         x = self.fc1(x)
         return x
 
+class DatasetTransformer(torch.utils.data.Dataset):
 
+    def __init__(self, base_dataset, transform):
+        self.base_dataset = base_dataset
+        self.transform = transform
+
+    def __getitem__(self, index):
+        img, target = self.base_dataset[index]
+        return self.transform(img), target
+
+    def __len__(self):
+        return len(self.base_dataset)
+        
 def train(args, model, device, train_loader, epoch, writer, train_losses, train_accuracies):
     model.train()
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
