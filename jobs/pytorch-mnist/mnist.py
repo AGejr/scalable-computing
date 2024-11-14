@@ -265,8 +265,6 @@ def main():
 
     print(f"World Size: {os.environ['WORLD_SIZE']}. Rank: {os.environ['RANK']}")
 
-    global_rank = dist.get_global_rank(model.process_group, dist.get_rank(model.process_group))
-
     dist.init_process_group(backend=args.backend)
     model = nn.parallel.DistributedDataParallel(model)
 
@@ -295,12 +293,12 @@ def main():
         if early_stopping.step(val_loss):
           print("stoped early")
           break
-        if val_loss < best_val_loss and args.save_model and global_rank == 0:
+        if val_loss < best_val_loss and args.save_model:
             best_val_loss = val_loss
             torch.save(model.state_dict(), best_model_path)
             print(f"New best model saved with val loss: {best_val_loss:.4f}")
 
-    if args.save_model and global_rank == 0:
+    if args.save_model:
         torch.save(model.state_dict(), os.path.join(output_dir, "mnist_cnn.pt"))
 
     writer.close()
