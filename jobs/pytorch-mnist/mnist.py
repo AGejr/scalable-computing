@@ -116,7 +116,24 @@ def val(model, device, val_loader, writer, epoch, val_losses, val_accuracies):
 
     print(f"val set: Average loss: {val_loss:.4f}, Accuracy: {accuracy:.2f}%")
     return val_loss
+class EarlyStopping:
+    def __init__(self, *, min_delta=0.0, patience=0):
+        self.min_delta = min_delta
+        self.patience = patience
+        self.best = float("inf")
+        self.wait = 0
+        self.done = False
 
+    def step(self, current):
+        self.wait += 1
+
+        if current < self.best - self.min_delta:
+            self.best = current
+            self.wait = 0
+        elif self.wait >= self.patience:
+            self.done = True
+
+        return self.done
 def main():
     # Training settings
     parser = argparse.ArgumentParser(description="PyTorch FashionMNIST Example")
