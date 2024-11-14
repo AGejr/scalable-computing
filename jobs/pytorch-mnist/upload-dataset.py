@@ -47,6 +47,6 @@ torch.save(valid_dataset, os.path.join(save_dir, 'valset.pth'))
 print(f"Training and test datasets saved to {save_dir}")
 
 os.system('gcloud storage cp ./data/trainset.pth gs://ml-model-bucket-123456/trainset.pth')
-os.system('gcloud storage cp ./data/valset.pth gs://ml-model-bucket-123456/testset.pth')
+os.system('gcloud storage cp ./data/valset.pth gs://ml-model-bucket-123456/valset.pth')
 
 os.system('rm -rf ./data')
