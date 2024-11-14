@@ -2,4 +2,5 @@ torch==2.4.1
 torchvision==0.19.1
 matplotlib
 tensorboardX==2.6.2
+tensorboard
 scikit-learn==1.5.2
