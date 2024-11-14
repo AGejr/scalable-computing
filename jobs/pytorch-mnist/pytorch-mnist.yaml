@@ -15,7 +15,7 @@ spec:
           containers:
             - name: pytorch
               image: gcr.io/storied-box-435409-f6/pytorch-dist-mnist:latest # Replace project-id with your GCP project ID
-              args: ["--backend", "gloo", "--save-model", "--no-cuda", "--epochs", "50", "--batch-size", "128", "--dir", "/data" ]
+              args: [ "--backend", "gloo", "--save-model", "--model", "0", "--no-cuda", "--epochs", "50", "--batch-size", "128" ]
               resources:
                 requests:
                   memory: "2Gi"
@@ -46,7 +46,7 @@ spec:
           containers:
             - name: pytorch
               image: gcr.io/storied-box-435409-f6/pytorch-dist-mnist:latest # Replace project-id with your GCP project ID
-              args: ["--backend", "gloo", "--save-model", "--no-cuda", "--epochs", "50", "--batch-size", "128", "--dir", "/data" ]
+              args: [ "--backend", "gloo", "--save-model", "--model", "0", "--no-cuda", "--epochs", "50", "--batch-size", "128" ]
               resources:
                 requests:
                   memory: "3Gi"
