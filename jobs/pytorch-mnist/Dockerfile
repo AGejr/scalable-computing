@@ -1,9 +1,10 @@
 FROM python:3.12.0
 
-RUN pip install tensorboardX==2.6.2
-RUN pip install torch==2.4.1
-RUN pip install torchvision==0.19.1
-RUN pip install matplotlib
+RUN pip install tensorboardX==2.6.2 \
+    torch==2.4.1 \
+    torchvision==0.19.1 \
+    matplotlib \
+    scikit-learn
 RUN mkdir -p /opt/mnist
 
 WORKDIR /opt/mnist/src
