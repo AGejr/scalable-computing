@@ -7,7 +7,7 @@ import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import TensorDataset, DataLoader, DistributedSampler
 from sklearn.metrics import f1_score
 
