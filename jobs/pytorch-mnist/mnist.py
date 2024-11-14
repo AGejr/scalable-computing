@@ -228,7 +228,8 @@ def main():
     torch.manual_seed(args.seed)
 
     device = torch.device("cuda" if use_cuda else "cpu")
-
+    best_test_loss = float("inf")
+    best_model_path = os.path.join(output_dir, "best_model.pt")
     # Attach model to the device.
     if args.model == 0:
       model = big().to(device)
