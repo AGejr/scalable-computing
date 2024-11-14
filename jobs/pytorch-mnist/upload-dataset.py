@@ -31,7 +31,8 @@ nb_train = int((1.0 - valid_ratio) * len(train_valid_dataset))
 nb_valid =  int(valid_ratio * len(train_valid_dataset))
 train_dataset, valid_dataset = torch.utils.data.dataset.random_split(train_valid_dataset, [nb_train, nb_valid])
 train_dataset = DatasetTransformer(train_dataset,transform)
-valid_dataset = DatasetTransformer(valid_dataset,transforms.ToTensor())
+valid_dataset = DatasetTransformer(valid_dataset,transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.5,), (0.5,))
+]))
 print("FashionMNIST dataset downloaded and saved successfully.")
 # Define the directory to save the dataset
 save_dir = './data'
