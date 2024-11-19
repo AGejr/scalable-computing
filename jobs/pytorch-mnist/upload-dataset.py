@@ -1,6 +1,7 @@
 import torch
 from torchvision import datasets, transforms
 import os
+import argparse
 
 class DatasetTransformer(torch.utils.data.Dataset):
 
@@ -46,7 +47,11 @@ torch.save(valid_dataset, os.path.join(save_dir, 'valset.pth'))
 
 print(f"Training and test datasets saved to {save_dir}")
 
-os.system('gcloud storage cp ./data/trainset.pth gs://ml-model-bucket-123456/trainset.pth')
-os.system('gcloud storage cp ./data/valset.pth gs://ml-model-bucket-123456/valset.pth')
+parser = argparse.ArgumentParser(description='Upload dataset to cloud storage')
+parser.add_argument('--upload', action='store_true', default=False, help='Upload the dataset to cloud storage and remove local data')
+args = parser.parse_args()
 
-os.system('rm -rf ./data')
+if args.upload:
+    os.system('gcloud storage cp ./data/trainset.pth gs://ml-model-bucket-123456/trainset.pth')
+    os.system('gcloud storage cp ./data/valset.pth gs://ml-model-bucket-123456/valset.pth')
+    os.system('rm -rf ./data')
