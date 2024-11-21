@@ -298,7 +298,7 @@ def main():
     val_loader = DataLoader(
         val_data,
         batch_size=args.val_batch_size,
-        sampler=DistributedSampler(train_data))
+        sampler=DistributedSampler(val_data))
 
     train_losses, train_accuracies = [], []
     val_losses, val_accuracies = [], []
