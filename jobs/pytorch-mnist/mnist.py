@@ -89,21 +89,21 @@ def train(args, model, device, train_loader, epoch, writer, train_losses, train_
         optimizer.step()
 
         total_loss += loss.item()
-
-        # Calculate the number of correct predictions for the batch
         pred = output.argmax(dim=1, keepdim=True)
         correct += pred.eq(target.view_as(pred)).sum().item()
-        
 
     average_loss = total_loss / len(train_loader)
     accuracy = 100.0 * correct / len(train_loader.dataset)
-    writer.add_scalar("train_loss", average_loss, epoch)
-    writer.add_scalar("train_accuracy", accuracy, epoch)
+    
+    # Logging on rank 0 only
+    if dist.get_rank() == 0:
+        writer.add_scalar("train_loss", average_loss, epoch)
+        writer.add_scalar("train_accuracy", accuracy, epoch)
     train_losses.append(average_loss)
     train_accuracies.append(accuracy)
-    print(f"Train Epoch: {epoch} Loss: {loss.item():.4f} Accuracy: {accuracy:.2f}%")
+    print(f"Train Epoch: {epoch} Loss: {average_loss:.4f} Accuracy: {accuracy:.2f}%")
     return average_loss
-    
+
 def val(model, device, val_loader, writer, epoch, val_losses, val_accuracies):
     model.eval()
     val_loss = 0
@@ -118,17 +118,22 @@ def val(model, device, val_loader, writer, epoch, val_losses, val_accuracies):
             val_loss += nn.CrossEntropyLoss()(output, target).item()
             pred = output.argmax(dim=1, keepdim=True)
             correct += pred.eq(target.view_as(pred)).sum().item()
+            all_preds.extend(pred.cpu().numpy())
+            all_targets.extend(target.cpu().numpy())
 
     val_loss /= len(val_loader)
     accuracy = 100.0 * correct / len(val_loader.dataset)
     f1 = f1_score(all_targets, all_preds, average="weighted")
-    writer.add_scalar("val_loss", val_loss, epoch)
-    writer.add_scalar("val_accuracy", accuracy, epoch)
-    writer.add_scalar("val_f1_score", f1, epoch)
+    
+    # Logging on rank 0 only
+    if dist.get_rank() == 0:
+        writer.add_scalar("val_loss", val_loss, epoch)
+        writer.add_scalar("val_accuracy", accuracy, epoch)
+        writer.add_scalar("val_f1_score", f1, epoch)
 
-    print(f"val set: Average loss: {val_loss:.4f}, Accuracy: {accuracy:.2f}%")
+    print(f"Validation set: Average loss: {val_loss:.4f}, Accuracy: {accuracy:.2f}%")
     return val_loss
-class EarlyStopping:
+    class EarlyStopping:
     def __init__(self, *, min_delta=0.0, patience=0):
         self.min_delta = min_delta
         self.patience = patience
@@ -288,11 +293,13 @@ def main():
     train_loader = DataLoader(
         train_data,
         batch_size=args.batch_size,
-        shuffle=True)
+        shuffle=True,
+        sampler=DistributedSampler(train_data))
     val_loader = DataLoader(
         val_data,
         batch_size=args.val_batch_size,
-        shuffle=True)
+        shuffle=False,
+        sampler=DistributedSampler(train_data))
 
     train_losses, train_accuracies = [], []
     val_losses, val_accuracies = [], []
