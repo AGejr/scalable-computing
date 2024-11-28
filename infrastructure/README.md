@@ -1,19 +1,11 @@
 # infrastructure
 
-**Google cloud info**
-
-[GPU availability by regions and zones](https://cloud.google.com/compute/docs/gpus/gpu-regions-zones#view-using-table)
-
-[GPU pricing](https://cloud.google.com/compute/gpus-pricing)
-
-[GPU machine types](https://cloud.google.com/compute/docs/gpus)
-
-
 ## Prerequisites
 
 **Tools:**
 - gcloud
 - terraform
+- kubectl
 
 **Google cloud cli authentication:**
 
@@ -36,13 +28,13 @@ gcloud auth application-default login
 
 1. **Create tfvars**
 
-Create a `terraform.tfvars` file in this project to configure the project_id using the following example:
+Create a `terraform.tfvars` file in `./cluster` to configure the project_id using the following example:
 
 ```
 project_id = "your-project-id"
 ```
 
-2. **Run terraform**
+1. **Run terraform**
 
 In `./cluster` run:
 
@@ -54,19 +46,24 @@ terraform init
 terraform apply -var-file=terraform.tfvars
 ```
 
-3. **Authenticate kubeflow to cluster**
+3. **Authenticate kubectl to the cluster**
 
-Follow this guide: [Google cloud Kubectl access](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl)
+Authenticate kubectl to the cluster with the following command. **Remember** to add your Google cloud project ID.
+```
+gcloud container clusters get-credentials autopilot-cluster --zone us-central1 --project [Project ID]
+```
 
 4. **Apply Kubeflow training operator**
 
 Install Kubeflow Training operator v1.7.0:
 ```
-kubectl apply -k "github.com/kubeflow/training-operator.git/manifests/overlays/standalone?ref=v1.7.0"
+kubectl apply -k ./training-operator/manifests/overlays/standalone
 ```
 
-5. **Apply tfjob**
+## Deleting the platform
+
+In `./cluster` run:
 
 ```
-kubectl apply -f ./jobs/mnist-example.yaml
+terraform destroy
 ```
