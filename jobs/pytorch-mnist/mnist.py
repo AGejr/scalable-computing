@@ -120,8 +120,7 @@ def train(args, model, device, train_loader, epoch, writer, train_losses, train_
         accuracy = 100.0 * correct / counter_images
         writer.add_scalar("train_loss", loss.item(), epoch)
         writer.add_scalar("train_accuracy", accuracy, epoch)
-    train_losses.append(loss.item())
-    train_accuracies.append(accuracy)
+
     print(f"Train Epoch: {epoch} Loss: {loss.item():.4f} Accuracy: {accuracy:.2f}%")
     return loss.item()
 
