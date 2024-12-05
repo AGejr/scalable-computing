@@ -97,6 +97,8 @@ def train(args, model, device, train_loader, epoch, writer, train_losses, train_
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
     correct = 0
     total_loss = 0
+    if dist.get_rank() == 0:
+        counter_train=0
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
 
@@ -109,12 +111,14 @@ def train(args, model, device, train_loader, epoch, writer, train_losses, train_
         total_loss += loss.item()
         pred = output.argmax(dim=1, keepdim=True)
         correct += pred.eq(target.view_as(pred)).sum().item()
+        if dist.get_rank() == 0:
+            counter_train+=1
 
-    average_loss = total_loss / len(train_loader)
-    accuracy = 100.0 * correct / len(train_loader.dataset)
     
     # Logging on rank 0 only
     if dist.get_rank() == 0:
+        average_loss = total_loss / counter_train
+        accuracy = 100.0 * correct / counter_train
         writer.add_scalar("train_loss", average_loss, epoch)
         writer.add_scalar("train_accuracy", accuracy, epoch)
     train_losses.append(average_loss)
@@ -128,6 +132,8 @@ def val(model, device, val_loader, writer, epoch, val_losses, val_accuracies):
     correct = 0
     all_preds = []
     all_targets = []
+    if dist.get_rank() == 0:
+        counter_val=0
 
     with torch.no_grad():
         for data, target in val_loader:
@@ -138,13 +144,15 @@ def val(model, device, val_loader, writer, epoch, val_losses, val_accuracies):
             correct += pred.eq(target.view_as(pred)).sum().item()
             all_preds.extend(pred.cpu().numpy())
             all_targets.extend(target.cpu().numpy())
+            if dist.get_rank() == 0:
+                counter_val+=1
 
-    val_loss /= len(val_loader)
-    accuracy = 100.0 * correct / len(val_loader.dataset)
     f1 = f1_score(all_targets, all_preds, average="weighted")
     
     # Logging on rank 0 only
     if dist.get_rank() == 0:
+        val_loss /= counter_val
+        accuracy = 100.0 * correct / counter_val
         writer.add_scalar("val_loss", val_loss, epoch)
         writer.add_scalar("val_accuracy", accuracy, epoch)
         writer.add_scalar("val_f1_score", f1, epoch)
