@@ -315,7 +315,7 @@ def main():
     for epoch in range(1, args.epochs + 1):
         train_loss =train(args, model, device, train_loader, epoch, writer)
         val_loss =val(model, device, val_loader, writer, epoch)
-        if dist.get_rank() == 0
+        if dist.get_rank() == 0:
             if early_stopping.step(val_loss):
                 print("stoped early")
                 earlystoppingflag+=1
