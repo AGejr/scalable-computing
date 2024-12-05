@@ -19,16 +19,16 @@ class big(nn.Module):
             nn.Conv2d(1, 32, kernel_size=3, stride=1, padding=1),  # First conv layer
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2),  # First pooling layer
-            nn.Dropout(0.25)
+            nn.Dropout(0.0)
         )
         self.layer2 = nn.Sequential(
             nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1),  # Second conv layer
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2),  # Second pooling layer
-            nn.Dropout(0.25)
+            nn.Dropout(0.0)
         )
         self.fc1 = nn.Linear(64 * 7 * 7, 128)  # Fully connected layer
-        self.fc1_dropout = nn.Dropout(0.25)
+        self.fc1_dropout = nn.Dropout(0.0)
         self.fc2 = nn.Linear(128, 10)  # Output layer for 10 classes
 
     def forward(self, x):
@@ -83,7 +83,7 @@ class EarlyStopping:
 
     def step(self, current):
         self.wait += 1
-
+        print(f"wait : {self.wait}")
         if current < self.best - self.min_delta:
             self.best = current
             self.wait = 0
@@ -139,6 +139,8 @@ def val(model, device, val_loader, writer, epoch):
             val_loss += nn.CrossEntropyLoss()(output, target).item()
             pred = output.argmax(dim=1, keepdim=True)
             correct += pred.eq(target.view_as(pred)).sum().item()
+            print(f"Processed batch {counter_batches}/{len(val_loader)}")
+            print(f"Total images processed so far: {counter_images}")
             all_preds.extend(pred.cpu().numpy())
             all_targets.extend(target.cpu().numpy())
             if dist.get_rank() == 0:
