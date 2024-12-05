@@ -311,10 +311,10 @@ def main():
         val_loss =val(model, device, val_loader, writer, epoch)
         if early_stopping.step(val_loss):
           print("stoped early")
+          torch.distributed.barrier()
           break
         if val_loss < best_val_loss and args.save_model and dist.get_rank() == 0:
             best_val_loss = val_loss
-            torch.distributed.barrier()
             torch.save(model.state_dict(), best_model_path)
             print(f"New best model saved with val loss: {best_val_loss:.4f}")
 
