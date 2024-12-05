@@ -97,6 +97,7 @@ def train(args, model, device, train_loader, epoch, writer, train_losses, train_
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
     correct = 0
     total_loss = 0
+    accuracy
     if dist.get_rank() == 0:
         counter_images=0
     for batch_idx, (data, target) in enumerate(train_loader):
@@ -130,6 +131,7 @@ def val(model, device, val_loader, writer, epoch, val_losses, val_accuracies):
     correct = 0
     all_preds = []
     all_targets = []
+    accuracy
 
     if dist.get_rank() == 0:
         counter_images = 0
