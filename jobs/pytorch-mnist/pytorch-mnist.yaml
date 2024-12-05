@@ -15,7 +15,7 @@ spec:
           containers:
             - name: pytorch
               image: gcr.io/storied-box-435409-f6/pytorch-dist-mnist:latest # Replace project-id with your GCP project ID
-              args: [ "--backend", "gloo", "--save-model", "--model", "0", "--no-cuda", "--epochs", "100", "--batch-size", "128", "--lr", "0.001", "--patience", "10" ]
+              args: [ "--backend", "gloo", "--save-model", "--model", "0", "--no-cuda", "--epochs", "100", "--batch-size", "128", "--val-batch-size", "128", "--lr", "0.001", "--patience", "10" ]
               resources:
                 requests:
                   memory: "2Gi"
@@ -46,7 +46,7 @@ spec:
           containers:
             - name: pytorch
               image: gcr.io/storied-box-435409-f6/pytorch-dist-mnist:latest # Replace project-id with your GCP project ID
-              args: [ "--backend", "gloo", "--save-model", "--model", "0", "--no-cuda", "--epochs", "100", "--batch-size", "128", "--lr", "0.001", "--patience", "10" ]
+              args: [ "--backend", "gloo", "--save-model", "--model", "0", "--no-cuda", "--epochs", "100", "--batch-size", "128", "--val-batch-size", "128", "--lr", "0.001", "--patience", "10" ]
               resources:
                 requests:
                   memory: "3Gi"
