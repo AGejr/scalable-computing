@@ -316,7 +316,7 @@ def main():
             if early_stopping.step(val_loss):
                 print("stoped early")
                 earlystoppingflag+=1
-        dist.all_reduce(earlystoppingflag,op=ReduceOp.SUM)
+        dist.all_reduce(earlystoppingflag,op=dist.ReduceOp.SUM)
         if earlystoppingflag == 1:
             print("breaking")
             break
