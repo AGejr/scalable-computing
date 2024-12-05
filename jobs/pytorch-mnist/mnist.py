@@ -129,7 +129,6 @@ def val(model, device, val_loader, writer, epoch):
     correct = 0
     all_preds = []
     all_targets = []
-    counter_batches = 0
 
     if dist.get_rank() == 0:
         counter_images = 0
@@ -141,8 +140,6 @@ def val(model, device, val_loader, writer, epoch):
             val_loss += nn.CrossEntropyLoss()(output, target).item()
             pred = output.argmax(dim=1, keepdim=True)
             correct += pred.eq(target.view_as(pred)).sum().item()
-            counter_batches += 1
-            counter_images2 += data.size(0)
 
             all_preds.extend(pred.cpu().numpy())
             all_targets.extend(target.cpu().numpy())
