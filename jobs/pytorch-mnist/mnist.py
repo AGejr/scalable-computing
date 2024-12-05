@@ -19,16 +19,16 @@ class big(nn.Module):
             nn.Conv2d(1, 32, kernel_size=3, stride=1, padding=1),  # First conv layer
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2),  # First pooling layer
-            nn.Dropout(0.0)
+            nn.Dropout(0.25)
         )
         self.layer2 = nn.Sequential(
             nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1),  # Second conv layer
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2),  # Second pooling layer
-            nn.Dropout(0.0)
+            nn.Dropout(0.25)
         )
         self.fc1 = nn.Linear(64 * 7 * 7, 128)  # Fully connected layer
-        self.fc1_dropout = nn.Dropout(0.0)
+        self.fc1_dropout = nn.Dropout(0.25)
         self.fc2 = nn.Linear(128, 10)  # Output layer for 10 classes
 
     def forward(self, x):
@@ -117,10 +117,11 @@ def train(args, model, device, train_loader, epoch, writer):
     
     # Logging on rank 0 only
     if dist.get_rank() == 0:
+        avg_loss=total_loss/ counter_images
         accuracy = 100.0 * correct / counter_images
-        writer.add_scalar("train_loss", total_loss, epoch)
+        writer.add_scalar("train_loss", avg_loss, epoch)
         writer.add_scalar("train_accuracy", accuracy, epoch)
-        print(f"Train Epoch: {epoch} Loss: {total_loss:.4f} Accuracy: {accuracy:.2f}%")
+        print(f"Train Epoch: {epoch} Loss: {avg_loss:.4f} Accuracy: {accuracy:.2f}%")
     return loss.item()
 
 def val(model, device, val_loader, writer, epoch):
@@ -150,11 +151,12 @@ def val(model, device, val_loader, writer, epoch):
     
     # Logging on rank 0 only
     if dist.get_rank() == 0:
+        avg_loss=val_loss/ counter_images
         accuracy = 100.0 * correct / counter_images
-        writer.add_scalar("val_loss", val_loss, epoch)
+        writer.add_scalar("val_loss", avg_loss, epoch)
         writer.add_scalar("val_accuracy", accuracy, epoch)
         writer.add_scalar("val_f1_score", f1, epoch)
-        print(f"Validation set: Average loss: {val_loss:.4f}, Accuracy: {accuracy:.2f}%")
+        print(f"Validation set: Average loss: {avg_loss:.4f}, Accuracy: {accuracy:.2f}%")
     return val_loss
 
 def main():
