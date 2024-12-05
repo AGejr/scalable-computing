@@ -311,7 +311,7 @@ def main():
 
     best_val_loss=float("inf")
     early_stopping = EarlyStopping(patience=args.patience)
-    earlystoppingflag=troch.zeros(1).to(device)
+    earlystoppingflag=torch.zeros(1).to(device)
     for epoch in range(1, args.epochs + 1):
         train_loss =train(args, model, device, train_loader, epoch, writer)
         val_loss =val(model, device, val_loader, writer, epoch)
