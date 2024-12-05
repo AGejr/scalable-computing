@@ -118,9 +118,9 @@ def train(args, model, device, train_loader, epoch, writer):
     # Logging on rank 0 only
     if dist.get_rank() == 0:
         accuracy = 100.0 * correct / counter_images
-        writer.add_scalar("train_loss", loss.item(), epoch)
+        writer.add_scalar("train_loss", total_loss, epoch)
         writer.add_scalar("train_accuracy", accuracy, epoch)
-        print(f"Train Epoch: {epoch} Loss: {loss.item():.4f} Accuracy: {accuracy:.2f}%")
+        print(f"Train Epoch: {epoch} Loss: {total_loss:.4f} Accuracy: {accuracy:.2f}%")
     return loss.item()
 
 def val(model, device, val_loader, writer, epoch):
