@@ -130,7 +130,7 @@ def val(model, device, val_loader, writer, epoch):
     all_preds = []
     all_targets = []
     counter_batches = 0
-    counter_images2=0
+
     if dist.get_rank() == 0:
         counter_images = 0
 
@@ -143,8 +143,7 @@ def val(model, device, val_loader, writer, epoch):
             correct += pred.eq(target.view_as(pred)).sum().item()
             counter_batches += 1
             counter_images2 += data.size(0)
-            print(f"Processed batch {counter_batches}/{len(val_loader)}")
-            print(f"Total images processed so far: {counter_images2}")
+
             all_preds.extend(pred.cpu().numpy())
             all_targets.extend(target.cpu().numpy())
             if dist.get_rank() == 0:
@@ -312,13 +311,18 @@ def main():
 
     best_val_loss=float("inf")
     early_stopping = EarlyStopping(patience=args.patience)
+    earlystoppingflag=troch.zeros(1).to(device)
     for epoch in range(1, args.epochs + 1):
         train_loss =train(args, model, device, train_loader, epoch, writer)
         val_loss =val(model, device, val_loader, writer, epoch)
-        if early_stopping.step(val_loss):
-          print("stoped early")
-          torch.distributed.barrier()
-          break
+        if dist.get_rank() == 0
+            if early_stopping.step(val_loss):
+                print("stoped early")
+                earlystoppingflag+=1
+        dist.all_reduce(earlystoppingflag,op=ReduceOp.SUM)
+        if earlystoppingflag == 1:
+            print("breaking")
+            break
         if val_loss < best_val_loss and args.save_model and dist.get_rank() == 0:
             best_val_loss = val_loss
             torch.save(model.state_dict(), best_model_path)
