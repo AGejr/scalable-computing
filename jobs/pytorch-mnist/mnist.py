@@ -92,12 +92,11 @@ class EarlyStopping:
 
         return self.done
         
-def train(args, model, device, train_loader, epoch, writer, train_losses, train_accuracies):
+def train(args, model, device, train_loader, epoch, writer):
     model.train()
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
     correct = 0
     total_loss = 0
-    accuracy
     if dist.get_rank() == 0:
         counter_images=0
     for batch_idx, (data, target) in enumerate(train_loader):
@@ -121,18 +120,15 @@ def train(args, model, device, train_loader, epoch, writer, train_losses, train_
         accuracy = 100.0 * correct / counter_images
         writer.add_scalar("train_loss", loss.item(), epoch)
         writer.add_scalar("train_accuracy", accuracy, epoch)
-
-    print(f"Train Epoch: {epoch} Loss: {loss.item():.4f} Accuracy: {accuracy:.2f}%")
+        print(f"Train Epoch: {epoch} Loss: {loss.item():.4f} Accuracy: {accuracy:.2f}%")
     return loss.item()
 
-def val(model, device, val_loader, writer, epoch, val_losses, val_accuracies):
+def val(model, device, val_loader, writer, epoch):
     model.eval()
     val_loss = 0
     correct = 0
     all_preds = []
     all_targets = []
-    accuracy
-
     if dist.get_rank() == 0:
         counter_images = 0
 
@@ -156,8 +152,7 @@ def val(model, device, val_loader, writer, epoch, val_losses, val_accuracies):
         writer.add_scalar("val_loss", val_loss, epoch)
         writer.add_scalar("val_accuracy", accuracy, epoch)
         writer.add_scalar("val_f1_score", f1, epoch)
-
-    print(f"Validation set: Average loss: {val_loss:.4f}, Accuracy: {accuracy:.2f}%")
+        print(f"Validation set: Average loss: {val_loss:.4f}, Accuracy: {accuracy:.2f}%")
     return val_loss
 
 def main():
@@ -308,14 +303,12 @@ def main():
         batch_size=args.val_batch_size,
         sampler=DistributedSampler(val_data))
 
-    train_losses, train_accuracies = [], []
-    val_losses, val_accuracies = [], []
 
     best_val_loss=float("inf")
     early_stopping = EarlyStopping(patience=args.patience)
     for epoch in range(1, args.epochs + 1):
-        train_loss =train(args, model, device, train_loader, epoch, writer, train_losses, train_accuracies)
-        val_loss =val(model, device, val_loader, writer, epoch, val_losses, val_accuracies)
+        train_loss =train(args, model, device, train_loader, epoch, writer)
+        val_loss =val(model, device, val_loader, writer, epoch)
         if early_stopping.step(val_loss):
           print("stoped early")
           break
