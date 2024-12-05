@@ -123,7 +123,7 @@ def train(args, model, device, train_loader, epoch, writer, train_losses, train_
     train_losses.append(loss.item())
     train_accuracies.append(accuracy)
     print(f"Train Epoch: {epoch} Loss: {loss.item():.4f} Accuracy: {accuracy:.2f}%")
-    return average_loss
+    return loss.item()
 
 def val(model, device, val_loader, writer, epoch, val_losses, val_accuracies):
     model.eval()
