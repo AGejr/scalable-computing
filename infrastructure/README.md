@@ -34,7 +34,7 @@ Create a `terraform.tfvars` file in `./cluster` to configure the project_id usin
 project_id = "your-project-id"
 ```
 
-1. **Run terraform**
+2. **Run terraform**
 
 In `./cluster` run:
 
